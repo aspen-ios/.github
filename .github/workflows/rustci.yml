@@ -1,0 +1,94 @@
+name: Rust CI
+
+on:
+  workflow_call:
+    secrets:
+      ASPEN_CI_READ_TOKEN:
+        description: Read-only Contents access to the private Rust dependencies
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ github.event.repository.name }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: ${{ github.event.repository.name }}
+          persist-credentials: false
+
+      - name: Verify private dependency access
+        if: github.event.repository.name == 'aspen' || github.event.repository.name == 'boot'
+        env:
+          DEPENDENCY_TOKEN: ${{ secrets.ASPEN_CI_READ_TOKEN }}
+        run: |
+          if [[ -z "$DEPENDENCY_TOKEN" ]]; then
+            echo "::error::Configure ASPEN_CI_READ_TOKEN with read-only access to the private Rust dependencies."
+            exit 1
+          fi
+
+      - name: Check out d22ap
+        if: github.event.repository.name == 'aspen' || github.event.repository.name == 'boot'
+        uses: actions/checkout@v4
+        with:
+          repository: aspen-ios/d22ap
+          ref: main
+          path: d22ap
+          token: ${{ secrets.ASPEN_CI_READ_TOKEN }}
+          persist-credentials: false
+
+      - name: Check out boot
+        if: github.event.repository.name == 'aspen'
+        uses: actions/checkout@v4
+        with:
+          repository: aspen-ios/boot
+          ref: main
+          path: boot
+          token: ${{ secrets.ASPEN_CI_READ_TOKEN }}
+          persist-credentials: false
+
+      - name: Check out host
+        if: github.event.repository.name == 'aspen'
+        uses: actions/checkout@v4
+        with:
+          repository: aspen-ios/host
+          ref: main
+          path: host
+          token: ${{ secrets.ASPEN_CI_READ_TOKEN }}
+          persist-credentials: false
+
+      - name: Check out wire
+        if: github.event.repository.name == 'aspen'
+        uses: actions/checkout@v4
+        with:
+          repository: aspen-ios/wire
+          ref: main
+          path: wire
+          token: ${{ secrets.ASPEN_CI_READ_TOKEN }}
+          persist-credentials: false
+
+      - name: Set up stable Rust
+        run: |
+          rustup toolchain install stable --profile minimal --component rustfmt --component clippy
+          rustup override set stable
+          rustup target add x86_64-pc-windows-msvc
+
+      - name: Format
+        run: cargo fmt --all -- --check
+
+      - name: Check
+        run: cargo check --all-targets
+
+      - name: Lint
+        run: cargo clippy --all-targets --all-features -- -D warnings
+
+      - name: Test
+        run: cargo test --all-targets
+
+      - name: Check the Windows target
+        run: cargo check --target x86_64-pc-windows-msvc
