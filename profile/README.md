@@ -1,9 +1,10 @@
 # Aspen
 
-An iPhone X emulator for Linux.
+The first iPhone X emulator engineered for performance — real iOS
+16.7.16 (iPhone10,3, D22AP) on a tuned QEMU stack, built to turn
+multi-second input lag into real-time responsiveness.
 
-Real iOS 16.7.16 (iPhone10,3, D22AP) booted on QEMU, presented in a
-window, driven for responsiveness. One device, one OS, one goal.
+One device, one OS, one goal.
 
 The organization is split by subsystem: the frontend (`aspen`), the
 protocol library (`wire`), the boot toolchain (`boot`), the device
