@@ -70,7 +70,10 @@ jobs:
           req = urllib.request.Request(
               os.environ["WEBHOOK"],
               data=json.dumps(payload).encode(),
-              headers={"Content-Type": "application/json"},
+              headers={
+                  "Content-Type": "application/json",
+                  "User-Agent": "Aspen-CI/1.0 (github-actions)",
+              },
           )
           urllib.request.urlopen(req).read()
           PY
